@@ -110,6 +110,8 @@ OSStartHighRdy:
 # Restore x1 to x31 registers (base registers)
     # load word from memory addres [(0 * 4) + sp] into ra register
     lw     ra,   0 * 4(sp)
+    lw     t0,  64 * 4(sp)
+    fscsr  t0
     lw     t0,   4 * 4(sp)
     lw     t1,   5 * 4(sp)
     lw     t2,   6 * 4(sp)
@@ -173,8 +175,8 @@ OSStartHighRdy:
     flw    f31, 63 * 4(sp)
 
 # Compensate for the stack pointer
-    # sp = sp + 64 * 4
-    addi   sp, sp, 64 * 4
+    # sp = sp + 65 * 4
+    addi   sp, sp, 65 * 4
 
 # Use register t6 to jump to HIGHEST priority
     csrr   t6, mepc
@@ -209,10 +211,12 @@ OSCtxSw:
 .align 8
 ucos_intr_exception_handler:
     # save regs to current sp
-    addi sp, sp, -4*64
+    addi sp, sp, -4*65
     # store contents of register ra into memory [(0 * 4) + sp]
     sw     ra,   0 * 4(sp)
     sw     t0,   4 * 4(sp)
+    frcsr  t0
+    sw     t0,  64 * 4(sp)
     sw     t1,   5 * 4(sp)
     sw     t2,   6 * 4(sp)
     sw     s0,   7 * 4(sp)
@@ -285,7 +289,7 @@ ucos_intr_exception_handler:
     # If t1 != t3 jump to DONTADD:
     bne t1, t3, DONTADD
     addi   t0,  t0, 4
-   
+
 DONTADD: # for interrupt do not add 4 in mepc
     sw     t0,  31*4(sp)
     # load address of OSTCBCurPtr into t0 register
@@ -312,7 +316,7 @@ run_exception_handler:
     j run_ecall_handler
 
 run_interrupt_exception_handler:
-    jal osa_intr_master_isr 
+    jal osa_intr_master_isr
 
 run_ecall_handler:
     j Software_IRQHandler
@@ -361,6 +365,8 @@ Software_IRQHandler:
 
 # Restore x1 to x31 registers
     lw     ra,   0 * 4(sp)
+    lw     t0,  64 * 4(sp)
+    fscsr  t0
     lw     t0,   4 * 4(sp)
     lw     t1,   5 * 4(sp)
     lw     t2,   6 * 4(sp)
@@ -424,13 +430,13 @@ Software_IRQHandler:
     flw    f31, 63 * 4(sp)
 
 # Compensate for the stack pointer
-    addi   sp, sp, 4 * 64
+    addi   sp, sp, 4 * 65
 
 # Exception return will restore remaining context
     # set MPIE = 1
     # interrupts will be enabled from here onwards
     li t0, 0x80
-    csrrs zero, mstatus, t0   
+    csrrs zero, mstatus, t0
     mret
 
 #********************************************************************************************************
