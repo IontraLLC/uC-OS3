@@ -35,6 +35,7 @@
     .extern  OSTCBCurPtr
     .extern  OSTCBHighRdyPtr
     .extern  OSTaskSwHook
+    .extern  OS_CPU_ExceptStkBase
 
 
     .global  OSStartHighRdy                          # Functions declared in this file
@@ -301,6 +302,9 @@ DONTADD: # for interrupt do not add 4 in mepc
     lw     t1, 0(t0)
     # store value stored in sp to [t1 + 0] address
     sw     sp, 0(t1)
+
+    # switch to isr stack
+    lw     sp, OS_CPU_ExceptStkBase
 
     li t1, ARCH_CPU_MCAUSE_INTR_MASK
     csrr  t0, mcause
